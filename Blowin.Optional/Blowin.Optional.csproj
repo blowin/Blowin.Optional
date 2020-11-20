@@ -4,6 +4,8 @@
         <TargetFramework>netstandard2.0</TargetFramework>
         <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
         <Title>Blowin.Optional</Title>
+        <PackageProjectUrl>https://github.com/blowin/Blowin.Optional</PackageProjectUrl>
+        <RepositoryUrl>https://github.com/blowin/Blowin.Optional</RepositoryUrl>
     </PropertyGroup>
 
 </Project>
