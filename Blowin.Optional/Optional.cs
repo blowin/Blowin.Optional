@@ -1,15 +1,39 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Blowin.Optional
 {
     public static class OptionalExt
     {
         public static Optional<T> AsOptional<T>(this T self) => Optional.From(self);
+        public static Optional<T> AsOptional<T>(this T? self) 
+            where T : struct => Optional.From(self);
+
+        public static Optional<T> FirstOrNone<T>(this IEnumerable<T> self)
+        {
+            var res = self.FirstOrDefault();
+            return Optional.From(res);
+        }
+
+        public static Optional<T> FirstOrNone<T>(this IQueryable<T> self)
+        {
+            var res = self.FirstOrDefault();
+            return Optional.From(res);
+        }
+        
+        public static Optional<TRes> Map<T, TRes>(this Optional<T> self, Func<T, TRes?> map)
+            where TRes : struct
+        {
+            return self.IsSome ? Optional.From(map(self.Value)) : Optional.None<TRes>();
+        }
     }
     
     public static class Optional
     {
+        public static Optional<T> From<T>(T? val) 
+            where T : struct => val.HasValue ? new Optional<T>(val.Value) : None<T>();
+        
         public static Optional<T> From<T>(T val) => new Optional<T>(val);
 
         public static Optional<T> None<T>() => new Optional<T>();
