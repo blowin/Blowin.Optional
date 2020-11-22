@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.Serialization;
 
 namespace Blowin.Optional
 {
@@ -39,14 +40,19 @@ namespace Blowin.Optional
         public static Optional<T> None<T>() => new Optional<T>();
     }
     
-    public readonly struct Optional<T> : IEquatable<Optional<T>>
+    [Serializable, DataContract]
+    public readonly struct Optional<T> : IEquatable<Optional<T>>, IEquatable<T>
     {
+        [DataMember]
         public readonly T Value;
         
+        [DataMember]
         public readonly bool IsSome;
         
+        [IgnoreDataMember]
         public bool IsNone => !IsSome;
 
+        [IgnoreDataMember]
         public T ValueOrThrow
         {
             get
@@ -72,10 +78,10 @@ namespace Blowin.Optional
         
         public Optional<TRes> Map<TRes>(Func<T, TRes> mapSome, Func<TRes> mapNone) => Optional.From(IsSome ? mapSome(Value) : mapNone());
 
-        public Optional<TRes> MapMany<TRes>(Func<T, Optional<TRes>> mapSome, Func<Optional<TRes>> mapNone)
+        public Optional<TRes> FlatMap<TRes>(Func<T, Optional<TRes>> mapSome, Func<Optional<TRes>> mapNone)
             => IsSome ? mapSome(Value) : mapNone();
         
-        public Optional<TRes> MapMany<TRes>(Func<T, Optional<TRes>> mapSome)
+        public Optional<TRes> FlatMap<TRes>(Func<T, Optional<TRes>> mapSome)
             => IsSome ? mapSome(Value) : Optional.None<TRes>();
 
         public static bool operator ==(Optional<T> left, Optional<T> right) => left.Equals(right);
@@ -92,7 +98,20 @@ namespace Blowin.Optional
 
         public override int GetHashCode() => IsSome ? EqualityComparer<T>.Default.GetHashCode(Value) : -124512;
 
-        public override bool Equals(object obj) => obj is Optional<T> o && Equals(o);
+        public bool Equals(T other) => IsSome && EqualityComparer<T>.Default.Equals(Value, other);
+
+        public override bool Equals(object obj)
+        {
+            switch (obj)
+            {
+                case Optional<T> op:
+                    return Equals(op);
+                case T v:
+                    return Equals(v);
+                default:
+                    return false;
+            }
+        }
 
         public override string ToString() => IsSome ? $"Some({Value})" : "None";
     }

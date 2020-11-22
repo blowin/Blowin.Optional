@@ -6,7 +6,7 @@
         <Title>Blowin.Optional</Title>
         <PackageProjectUrl>https://github.com/blowin/Blowin.Optional</PackageProjectUrl>
         <RepositoryUrl>https://github.com/blowin/Blowin.Optional</RepositoryUrl>
-        <PackageVersion>1.0.1</PackageVersion>
+        <PackageVersion>2.0.0</PackageVersion>
     </PropertyGroup>
 
 </Project>
