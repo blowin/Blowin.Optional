@@ -5,6 +5,10 @@ using System.Runtime.Serialization;
 
 namespace Blowin.Optional
 {
+    public readonly struct OptionalNoneTag
+    {
+    }
+    
     public static class OptionalExt
     {
         public static Optional<T> AsOptional<T>(this T self) => Optional.From(self);
@@ -26,18 +30,18 @@ namespace Blowin.Optional
         public static Optional<TRes> Map<T, TRes>(this Optional<T> self, Func<T, TRes?> map)
             where TRes : struct
         {
-            return self.IsSome ? Optional.From(map(self.Value)) : Optional.None<TRes>();
+            return self.IsSome ? Optional.From(map(self.Value)) : Optional.None();
         }
     }
     
     public static class Optional
     {
         public static Optional<T> From<T>(T? val) 
-            where T : struct => val.HasValue ? new Optional<T>(val.Value) : None<T>();
+            where T : struct => val.HasValue ? new Optional<T>(val.Value) : None();
         
         public static Optional<T> From<T>(T val) => new Optional<T>(val);
 
-        public static Optional<T> None<T>() => new Optional<T>();
+        public static OptionalNoneTag None() => new OptionalNoneTag();
     }
     
     [Serializable, DataContract]
@@ -72,9 +76,11 @@ namespace Blowin.Optional
         public static explicit operator T(Optional<T> d) => d.IsSome ? d.Value : throw new NullReferenceException("Optinal is empty");
     
         public static implicit operator Optional<T>(T d) => Optional.From(d);
+
+        public static implicit operator Optional<T>(OptionalNoneTag n) => new Optional<T>();
         
         public Optional<TRes> Map<TRes>(Func<T, TRes> mapSome) 
-            => IsSome ? Optional.From(mapSome(Value)) : Optional.None<TRes>();
+            => IsSome ? Optional.From(mapSome(Value)) : Optional.None();
         
         public Optional<TRes> Map<TRes>(Func<T, TRes> mapSome, Func<TRes> mapNone) => Optional.From(IsSome ? mapSome(Value) : mapNone());
 
@@ -82,7 +88,7 @@ namespace Blowin.Optional
             => IsSome ? mapSome(Value) : mapNone();
         
         public Optional<TRes> FlatMap<TRes>(Func<T, Optional<TRes>> mapSome)
-            => IsSome ? mapSome(Value) : Optional.None<TRes>();
+            => IsSome ? mapSome(Value) : Optional.None();
 
         public static bool operator ==(Optional<T> left, Optional<T> right) => left.Equals(right);
 
@@ -113,6 +119,19 @@ namespace Blowin.Optional
             }
         }
 
+        public Optional<TRes> SelectMany<TSecond, TRes>(Func<T, Optional<TSecond>> opSelector, Func<T, TSecond, TRes> projection)
+        {
+            if (IsNone)
+                return Optional.None();
+
+            var sec = opSelector(Value);
+            if (sec.IsNone)
+                return Optional.None();
+
+            var result = projection(Value, sec.Value);
+            return Optional.From(result);
+        }
+        
         public override string ToString() => IsSome ? $"Some({Value})" : "None";
     }
 }
