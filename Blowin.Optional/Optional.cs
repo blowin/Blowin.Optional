@@ -73,11 +73,15 @@ namespace Blowin.Optional
             IsSome = val != null;
         }
 
-        public static explicit operator T(Optional<T> d) => d.IsSome ? d.Value : throw new NullReferenceException("Optinal is empty");
+        public static explicit operator T(Optional<T> d) => d.IsSome ? d.Value : throw new NullReferenceException("Optional is empty");
     
         public static implicit operator Optional<T>(T d) => Optional.From(d);
 
         public static implicit operator Optional<T>(OptionalNoneTag n) => new Optional<T>();
+
+        public T ValueOr(T defaultV = default) => IsSome ? Value : defaultV;
+        
+        public T ValueOr(Func<T> factory) => IsSome ? Value : factory();
         
         public Optional<TRes> Map<TRes>(Func<T, TRes> mapSome) 
             => IsSome ? Optional.From(mapSome(Value)) : Optional.None();
